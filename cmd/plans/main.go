@@ -4,12 +4,15 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"log"
 	"net"
 	"net/http"
 
 	"github.com/dosedetelemetria/projeto-otel-na-pratica/internal/app"
 	"github.com/dosedetelemetria/projeto-otel-na-pratica/internal/config"
+	"github.com/dosedetelemetria/projeto-otel-na-pratica/internal/telemetry"
 	"google.golang.org/grpc"
 )
 
@@ -18,6 +21,14 @@ func main() {
 	flag.Parse()
 
 	c, _ := config.LoadConfig(*configFlag)
+
+	// Initialize telemetry
+	ctx := context.Background()
+	shutdown, err := telemetry.InitTelemetry(ctx, &c.Telemetry, "plans")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdown()
 
 	// starts the gRPC server
 	lis, _ := net.Listen("tcp", c.Server.Endpoint.GRPC)
