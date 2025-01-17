@@ -12,11 +12,12 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	Payments      Payments      `yaml:"payments"`
-	Subscriptions Subscriptions `yaml:"subscriptions"`
-	Plans         Plans         `yaml:"plans"`
-	Users         Users         `yaml:"users"`
-	Server        Server        `yaml:"server"`
+	Payments      Payments        `yaml:"payments"`
+	Subscriptions Subscriptions   `yaml:"subscriptions"`
+	Plans         Plans           `yaml:"plans"`
+	Users         Users           `yaml:"users"`
+	Server        Server          `yaml:"server"`
+	Telemetry     TelemetryConfig `yaml:"telemetry"`
 }
 
 type Server struct {
