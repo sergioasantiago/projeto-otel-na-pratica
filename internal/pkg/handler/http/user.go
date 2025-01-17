@@ -9,6 +9,7 @@ import (
 
 	"github.com/dosedetelemetria/projeto-otel-na-pratica/internal/pkg/model"
 	"github.com/dosedetelemetria/projeto-otel-na-pratica/internal/pkg/store"
+	"go.opentelemetry.io/otel"
 )
 
 // UserHandler is an HTTP handler that performs CRUD operations for model.User using a store.User
@@ -24,6 +25,9 @@ func NewUserHandler(store store.User) *UserHandler {
 }
 
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+	tracer := otel.Tracer("users")
+	_, span := tracer.Start(r.Context(), "list users")
+	defer span.End()
 	users, err := h.store.List(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,6 +62,9 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
+	meter := otel.Meter("users")
+	count, _ := meter.Int64Counter("get user")
+	count.Add(r.Context(), 1)
 	id := r.PathValue("id")
 	user, err := h.store.Get(r.Context(), id)
 	if err != nil {

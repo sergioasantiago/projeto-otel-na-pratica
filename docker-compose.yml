@@ -1,0 +1,45 @@
+services:
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+    command: "--name nats --http_port 8222 --js"
+    networks: ["nats"]
+
+  nats_stream_creator:
+    image: synadia/nats-server:nightly
+    container_name: nats_stream_creator
+    depends_on:
+      - nats
+    entrypoint: [
+      "sh", "-c",
+      "until nats --server=nats:4222 stream create payments --subjects 'payment.process' --storage memory --replicas 1 --retention=limits --discard=old --max-msgs 1000000 --max-msgs-per-subject 100000 --max-bytes 4294967296 --max-age 1d --max-msg-size 10485760 --dupe-window 2m --allow-rollup --no-deny-delete --no-deny-purge; do sleep 1; done"
+    ]
+    networks: [ "nats" ]
+  
+  otel_lgtm:
+    image: grafana/otel-lgtm
+    container_name: otel_lgtm
+    depends_on:
+      - nats
+    ports:
+      - 3000:3000
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - grafana:/data/grafana
+      - prometheus:/data/prometheus
+      - loki:/data/loki
+    environment:
+      - GF_PATHS_DATA=/data/grafana
+
+networks:
+  nats:
+    name: nats
+
+volumes:
+  grafana:
+  prometheus:
+  loki:
